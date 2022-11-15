@@ -1,0 +1,4 @@
+sournote4
+nom_sujet, echelle, SOAms, F_ref_min, F_ref_max, moment, 
+total_essais, Hits, Correct_rejections, Misses, False_alarms
+----------------------------------------------------------------------------------------------------------------------
