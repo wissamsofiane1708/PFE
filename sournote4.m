@@ -34,18 +34,11 @@ switch(lower(action))
     duree_note = 0.2;
     duree_ISI = 0.1;
     nom_sujet = input('votre nom :  ','s');
-    echelle = input('numéro de l''échelle :  ');
-    if echelle==1
-         scale = [0 2 5 7 9 12]; % pentatonique       
-    elseif echelle==2
-         scale = [0 2 4 5 7 9 11 12]; % diatonique, mode majeur
-    elseif echelle==3
-         scale = [0 2 4 6 8 10 12]; % tons entiers
-    elseif echelle==4
-         scale = [0 1 3 5 7 8 10 12]; % diatonique, mode de mi (phrygien)
-    end
+    %echelle = input('numéro de l''échelle :  ');
+    scale=[0 2 3 5 7 8 10 12]; % Eolien, mode de la
     Nnotes = size(scale, 2);
-    total_essais = input('nombre d''essais :  ');
+    %total_essais = input('nombre d''essais :  ');
+    total_essais = 20;
     interface_sournote4;
 
        

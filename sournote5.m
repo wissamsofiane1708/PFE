@@ -1,25 +1,24 @@
 function sournote5(action,varargin)
 
-% Identique à sournote2, sauf que : 
-% 1) F_ref varie aléatoirement d'un essai à l'autre, comme dans sournote4 ;
-% 2) les modifications de notes sont des déplacements de 1 demi-ton exact, comme dans sournote1 et sournote4, 
-%      et non pas 1 demi-ton étiré.
-% 3) comme dans sournote4, on stocke dans un fichier .csv ce qui s'est passé aux essais où la réponse fut incorrecte
+% Identique à sournote1, sauf que :
+% 1) F_ref change aléatoirement d'un essai à l'autre, dans une fourchette d'une octave ;
+% 2) on stocke dans un fichier .csv ce qui s'est passé aux essais où la réponse fut incorrecte
 %     (ce n'était pas fait quand le programme a été exécuté sur LD en janvier et février 2021)
-% Mars 2021
+% Janvier - Mars 2021
 
 persistent  poignee  moment nom_sujet  essai  total_essais ... 
                 rep_juste  rep  Hits  False_alarms  Misses  Correct_rejections ...
-                echelle  Nnotes  scale  F_ref_min  F_ref_max  stretch ...
+                echelle Nnotes scale  F_ref_min  F_ref_max ...
                 pattern_1_demitons pattern_2_demitons fileID ...
                 amp F_echan  F  duree_note  duree_ISI;  
 
-if nargin==2 % 2 arguments dans la fonction sournote5
+if nargin==2 % 2 arguments dans la fonction sournote4
     poignee = varargin{1}; % poignee est le 1er (et le seul) des varargin suivant "action"
 end
-if nargin==0 % on exécute sournote5 tout court
+if nargin==0 % on exécute sournote4 tout court
     action = 'initialisations';
 end
+
 
 
 switch(lower(action))
@@ -27,7 +26,7 @@ switch(lower(action))
    
     case 'initialisations',
     % fixe les paramètres, et puis lance l'interface graphique
-    rng('shuffle'); % initialisation générateur nbs aléatoires    
+    rng('shuffle'); 
     amp = 0.079; % va donner 65 dB SPL sur Dell M4700 avec Sennheiser HD 650 si slider windows à 26
     F_echan = 44100;
     F_ref_min = 370; % minimum de la fréquence minimum : F#4
@@ -35,27 +34,22 @@ switch(lower(action))
     duree_note = 0.2;
     duree_ISI = 0.1;
     nom_sujet = input('votre nom :  ','s');
-    echelle = input('numéro de l''échelle :  ');
-    stretch = 1.2;
-    if echelle==1
-         scale = stretch * [0 2 5 7 9 12]; % pentatonique       
-    elseif echelle==2
-         scale = stretch * [0 2 4 5 7 9 11 12]; % diatonique, mode majeur
-    elseif echelle==3
-         scale = stretch * [0 2 4 6 8 10 12]; % tons entiers
-    elseif echelle==4
-         scale = stretch * [0 1 3 5 7 8 10 12]; % diatonique, mode de mi (phrygien)
-    end
+    %echelle = input('numéro de l''échelle :  ');
+    scales=[[2 3 5 7 8 10 ],[2 3 5 7 8 10 12],[0 2 3 5 7 8 10]]; % Eolien, mode de la
     Nnotes = size(scale, 2);
-    total_essais = input('nombre d''essais :  ');
+    %total_essais = input('nombre d''essais :  ');
+    total_essais = 20;
     interface_sournote5;
 
        
     case 'calibration',
+    disp("calibration");
     t = 5; % le son va durer 5 secondes
     temps = (0:1/F_echan:t)'; 
     signal_sinus = amp * sin(2*pi*1000*temps);
+    disp("before sonpur");
     son_pur = audioplayer(signal_sinus, F_echan, 24); 
+    disp("after sonpur");
     playblocking(son_pur); % joue le son et attend sa fin avant de rendre la main  
     
      
@@ -63,11 +57,11 @@ switch(lower(action))
     essai = 0;
     Hits = 0;  False_alarms = 0;  Misses = 0;  Correct_rejections = 0; 
     moment = datestr(now, 'yyyy mm dd HH MM'); % année mois jour heure minute
-    fileID = fopen('ErreursLD_sournote5.csv','a'); % ouverture du fichier permettant l'analyse des erreurs
+    fileID = fopen('ErreursLD_sournote4.csv','a'); % ouverture du fichier permettant l'analyse des erreurs
     % le fichier est créé s'il n'existe pas encore
     % s'il existe déjà, le 'a' fait en sorte qu'on va écrire à la suite de ce qui existe déjà
     fprintf(fileID,'%s;%d;%s\n', nom_sujet, echelle, moment);
-    sournote5('synthese');
+    sournote4('synthese');
       
     
     case 'synthese',
@@ -77,14 +71,18 @@ switch(lower(action))
     F_ref = F_ref_min * (2^rand); 
     if rand < 0.5
        rep_juste = 1; % Normal
+       scale=scales(1);
     else
        rep_juste = 2; % Anormal  
+       scale=scales(2);
     end  
     %
+    print(scale);
+    Nnotes = size(scale, 2);
     % 1er pattern
     ordrenotes_1 = randperm(Nnotes);
     pattern_1_demitons = [ ]; % c'est la succession des valeurs de la variable demitons  
-    pattern_1 = [ ];
+    pattern_1 = [ ]; % c'est le signal sonore lui-même    
     for i = 1:Nnotes
         z = ordrenotes_1(1, i);
         demitons = scale(1, z);
@@ -107,20 +105,17 @@ switch(lower(action))
             end
     end
     % On définit (mais sans forcément l'utiliser dans cet essai) une échelle 'scalediff' différente de 'scale' ;
-    % la différence consiste en un déplacement d'un demi-ton *exact* d'une note prise au hasard,
-    % en excluant les 2 notes extrêmes comme d'habitude.
-    %
-    % D'abord, on fait comme si on déplacait d'un demi-ton *étiré*, comme dans sournote2 ;
-    % c'est nécessaire pour que les possibilités de déplacement soient les mêmes que dans 
-    % sournote1, sournote2, et sournote4.
+    % la différence consiste en un déplacement d'un demi-ton d'une note prise au hasard,
+    % en excluant les 2 notes extrêmes, qui forment une octave.
+    % Voir script 'essai2' pour vérification de la procédure
     drapeau = 0; 
     while drapeau ~= Nnotes
             notechange = 1 + ceil(rand * (Nnotes - 2));  % varie de 2 à Nnotes-1
             demitons_avant_changement = scale(notechange);
             if rand < 0.5
-                demitons_apres_changement = demitons_avant_changement - stretch;
+                demitons_apres_changement = demitons_avant_changement - 1;
             else
-                demitons_apres_changement = demitons_avant_changement + stretch;
+                demitons_apres_changement = demitons_avant_changement + 1;
             end
             drapeau = 0;
             for i = 1:Nnotes    
@@ -129,13 +124,6 @@ switch(lower(action))
                      end                        
             end 
     end 
-    % Ensuite on rectifie le déplacement : il devient égal à un demi-ton *exact*.
-    if demitons_apres_changement < demitons_avant_changement
-          demitons_apres_changement = demitons_apres_changement + stretch - 1;
-    else
-          demitons_apres_changement = demitons_apres_changement - stretch + 1;       
-    end        
-    %
     scalediff = scale;  % initialisation
     scalediff(notechange) = demitons_apres_changement;
     %
@@ -177,7 +165,7 @@ switch(lower(action))
     pause(0.2); 
     set(poignee.Bouton1, 'BackgroundColor', [1 1 1]); % blanc
     drawnow;
-    sournote5('traitement_reponse');      
+    sournote4('traitement_reponse');      
      
       
     case 'reponse_2', % callback d'une pression sur la touche 2
@@ -190,7 +178,7 @@ switch(lower(action))
     pause(0.2); 
     set(poignee.Bouton2, 'BackgroundColor', [1 1 1]); % blanc
     drawnow;
-    sournote5('traitement_reponse');      
+    sournote4('traitement_reponse');      
                
     
     case 'traitement_reponse',
@@ -200,22 +188,22 @@ switch(lower(action))
         False_alarms = False_alarms + 1;
         fprintf(fileID,'%s;%d;%s;FA;P1', nom_sujet, echelle, moment);
         for i = 1:Nnotes
-            fprintf(fileID,';%2.2f', pattern_1_demitons(i));
+            fprintf(fileID,';%d', pattern_1_demitons(i));
         end
         fprintf(fileID,';P2');
         for i = 1:Nnotes
-            fprintf(fileID,';%2.2f', pattern_2_demitons(i));
+            fprintf(fileID,';%d', pattern_2_demitons(i));
         end
         fprintf(fileID,'\n');
     elseif (rep_juste==2) && (rep==1)
-        Misses = Misses + 1;
+        Misses = Misses + 1;                 
         fprintf(fileID,'%s;%d;%s;OM;P1', nom_sujet, echelle, moment);
         for i = 1:Nnotes
-            fprintf(fileID,';%2.2f', pattern_1_demitons(i));
+            fprintf(fileID,';%d', pattern_1_demitons(i));
         end
         fprintf(fileID,';P2');
         for i = 1:Nnotes
-            fprintf(fileID,';%2.2f', pattern_2_demitons(i));
+            fprintf(fileID,';%d', pattern_2_demitons(i));
         end
         fprintf(fileID,'\n');
     elseif (rep_juste==2) && (rep==2)
@@ -231,21 +219,17 @@ switch(lower(action))
         fprintf(1, 'Pourcentage de réponses correctes :\n');
         fprintf(1, '%6.2f;\n',perf);
     end
-    sournote5(action);
-    
+    sournote4(action);
+   
     
     case 'archivage',
-    fileID = fopen('RésultatsLD_sournote5.txt','a');
+    fileID = fopen('RésultatsLD_sournote4.txt','a');
     SOAms = round(1000 * (duree_note + duree_ISI));
-    PourcentEtirement = round(100 *(stretch - 1));
-    fprintf(fileID,'%s;%d;%d;%d;%d;%d;%s;%d;%d;%d;%d;%d\n', ...
-        nom_sujet, echelle, PourcentEtirement, SOAms, F_ref_min, F_ref_max, moment, ...
-        total_essais, Hits, Correct_rejections, Misses, False_alarms); 
+    fprintf(fileID,'%s;%d;%d;%d;%d;%s;%d;%d;%d;%d;%d\n', ...
+        nom_sujet, echelle, SOAms, F_ref_min, F_ref_max, moment, total_essais, Hits, Correct_rejections, Misses, False_alarms); 
     fclose(fileID);
-
    
 end % du switch initial
-
 
 
 function [vecteur_note] = note(F_echan, amp, duree_note, duree_ISI, F) % fabrique une note suivie d'un ISI
@@ -264,3 +248,5 @@ vecteur_note_sans_ISI = amp * sin(2*pi*F*temps_son./F_echan + rand*2*pi) .* enve
 nb_echan_ISI = round(F_echan * duree_ISI);
 ISI = zeros(1, nb_echan_ISI);
 vecteur_note = [vecteur_note_sans_ISI ISI];
+
+
