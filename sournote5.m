@@ -35,7 +35,7 @@ switch(lower(action))
     duree_ISI = 0.1;
     nom_sujet = input('votre nom :  ','s');
     %echelle = input('numéro de l''échelle :  ');
-    scales=[[2 3 5 7 8 10 ],[2 3 5 7 8 10 12],[0 2 3 5 7 8 10]]; % Eolien, mode de la
+    scales=[[2 3 5 7 8 10 12],[0 2 3 5 7 8 10],[0 2 3 5 7 8 10 12],[0 2 3 5 7 8 10 12]]; % Eolien, mode de la
     Nnotes = size(scale, 2);
     %total_essais = input('nombre d''essais :  ');
     total_essais = 20;
