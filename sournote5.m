@@ -57,11 +57,11 @@ switch(lower(action))
     essai = 0;
     Hits = 0;  False_alarms = 0;  Misses = 0;  Correct_rejections = 0; 
     moment = datestr(now, 'yyyy mm dd HH MM'); % année mois jour heure minute
-    fileID = fopen('ErreursLD_sournote4.csv','a'); % ouverture du fichier permettant l'analyse des erreurs
+    fileID = fopen('ErreursLD_sournote5.csv','a'); % ouverture du fichier permettant l'analyse des erreurs
     % le fichier est créé s'il n'existe pas encore
     % s'il existe déjà, le 'a' fait en sorte qu'on va écrire à la suite de ce qui existe déjà
     fprintf(fileID,'%s;%d;%s\n', nom_sujet, echelle, moment);
-    sournote4('synthese');
+    sournote5('synthese');
       
     
     case 'synthese',
@@ -165,7 +165,7 @@ switch(lower(action))
     pause(0.2); 
     set(poignee.Bouton1, 'BackgroundColor', [1 1 1]); % blanc
     drawnow;
-    sournote4('traitement_reponse');      
+    sournote5('traitement_reponse');      
      
       
     case 'reponse_2', % callback d'une pression sur la touche 2
@@ -178,7 +178,7 @@ switch(lower(action))
     pause(0.2); 
     set(poignee.Bouton2, 'BackgroundColor', [1 1 1]); % blanc
     drawnow;
-    sournote4('traitement_reponse');      
+    sournote5('traitement_reponse');      
                
     
     case 'traitement_reponse',
@@ -219,11 +219,11 @@ switch(lower(action))
         fprintf(1, 'Pourcentage de réponses correctes :\n');
         fprintf(1, '%6.2f;\n',perf);
     end
-    sournote4(action);
+    sournote5(action);
    
     
     case 'archivage',
-    fileID = fopen('RésultatsLD_sournote4.txt','a');
+    fileID = fopen('RésultatsLD_sournote5.txt','a');
     SOAms = round(1000 * (duree_note + duree_ISI));
     fprintf(fileID,'%s;%d;%d;%d;%d;%s;%d;%d;%d;%d;%d\n', ...
         nom_sujet, echelle, SOAms, F_ref_min, F_ref_max, moment, total_essais, Hits, Correct_rejections, Misses, False_alarms); 
