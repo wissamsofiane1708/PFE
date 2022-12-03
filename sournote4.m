@@ -242,4 +242,3 @@ nb_echan_ISI = round(F_echan * duree_ISI);
 ISI = zeros(1, nb_echan_ISI);
 vecteur_note = [vecteur_note_sans_ISI ISI];
 
-

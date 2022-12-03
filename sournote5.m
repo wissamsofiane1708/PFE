@@ -1,9 +1,9 @@
 function sournote5(action,varargin)
 
-% Identique ‡ sournote1, sauf que :
-% 1) F_ref change alÈatoirement d'un essai ‡ l'autre, dans une fourchette d'une octave ;
-% 2) on stocke dans un fichier .csv ce qui s'est passÈ aux essais o˘ la rÈponse fut incorrecte
-%     (ce n'Ètait pas fait quand le programme a ÈtÈ exÈcutÈ sur LD en janvier et fÈvrier 2021)
+% Identique √† sournote1, sauf que :
+% 1) F_ref change al√©atoirement d'un essai √† l'autre, dans une fourchette d'une octave ;
+% 2) on stocke dans un fichier .csv ce qui s'est pass√© aux essais o√π la r√©ponse fut incorrecte
+%     (ce n'√©tait pas fait quand le programme a √©t√© ex√©cut√© sur LD en janvier et f√©vrier 2021)
 % Janvier - Mars 2021
 
 persistent  poignee  moment nom_sujet  essai  total_essais ... 
@@ -15,7 +15,7 @@ persistent  poignee  moment nom_sujet  essai  total_essais ...
 if nargin==2 % 2 arguments dans la fonction sournote4
     poignee = varargin{1}; % poignee est le 1er (et le seul) des varargin suivant "action"
 end
-if nargin==0 % on exÈcute sournote4 tout court
+if nargin==0 % on ex√©cute sournote4 tout court
     action = 'initialisations';
 end
 
@@ -25,17 +25,20 @@ switch(lower(action))
 
    
     case 'initialisations',
-    % fixe les paramËtres, et puis lance l'interface graphique
+    % fixe les param√®tres, et puis lance l'interface graphique
     rng('shuffle'); 
-    amp = 0.079; % va donner 65 dB SPL sur Dell M4700 avec Sennheiser HD 650 si slider windows ‡ 26
+    amp = 0.079; % va donner 65 dB SPL sur Dell M4700 avec Sennheiser HD 650 si slider windows √† 26
     F_echan = 44100;
-    F_ref_min = 370; % minimum de la frÈquence minimum : F#4
-    F_ref_max = 2 * F_ref_min; % maximum de la frÈquence minimum   
+    F_ref_min = 370; % minimum de la fr√©quence minimum : F#4
+    F_ref_max = 2 * F_ref_min; % maximum de la fr√©quence minimum   
     duree_note = 0.2;
     duree_ISI = 0.1;
     nom_sujet = input('votre nom :  ','s');
-    %echelle = input('numÈro de l''Èchelle :  ');
-    scales=[[2 3 5 7 8 10 12],[0 2 3 5 7 8 10],[0 2 3 5 7 8 10 12],[0 2 3 5 7 8 10 12]]; % Eolien, mode de la
+    %echelle = input('num√©ro de l''√©chelle :  ');
+    scalesDor=[2 3 5 7 8 10 12; 0 2 3 5 7 8 10]; % Eolien, mode de la
+
+    scalesDorien=[ 0 2 3 5 7 8 10 12; 0 2 3 5 7 8 10 12];
+    disp(scalesDor(1,:));
     Nnotes = size(scale, 2);
     %total_essais = input('nombre d''essais :  ');
     total_essais = 20;
@@ -56,45 +59,50 @@ switch(lower(action))
     case 'debut_bloc_essais',
     essai = 0;
     Hits = 0;  False_alarms = 0;  Misses = 0;  Correct_rejections = 0; 
-    moment = datestr(now, 'yyyy mm dd HH MM'); % annÈe mois jour heure minute
+    moment = datestr(now, 'yyyy mm dd HH MM'); % ann√©e mois jour heure minute
     fileID = fopen('ErreursLD_sournote5.csv','a'); % ouverture du fichier permettant l'analyse des erreurs
-    % le fichier est crÈÈ s'il n'existe pas encore
-    % s'il existe dÈj‡, le 'a' fait en sorte qu'on va Ècrire ‡ la suite de ce qui existe dÈj‡
+    % le fichier est cr√©√© s'il n'existe pas encore
+    % s'il existe d√©j√†, le 'a' fait en sorte qu'on va √©crire √† la suite de ce qui existe d√©j√†
     fprintf(fileID,'%s;%d;%s\n', nom_sujet, echelle, moment);
     sournote5('synthese');
       
     
     case 'synthese',
     set (poignee.Bouton1,'Enable','Inactive');
-    set (poignee.Bouton2,'Enable','Inactive');        
+    set (poignee.Bouton2,'Enable','Inactive');   
+    scalesDor=[2 3 5 7 8 10 12; 0 2 3 5 7 8 10]; % Eolien, mode de la
+
+    scalesDorien=[ 0 2 3 5 7 8 10 12; 0 2 3 5 7 8 10 12];
+
     essai = essai+1;
     F_ref = F_ref_min * (2^rand); 
     if rand < 0.5
        rep_juste = 1; % Normal
-       scale=scales(1);
+       scale=scalesDor(1,:);
+
     else
        rep_juste = 2; % Anormal  
-       scale=scales(2);
+       scale=scalesDor(2,:);
     end  
     %
-    print(scale);
+    
     Nnotes = size(scale, 2);
     % 1er pattern
     ordrenotes_1 = randperm(Nnotes);
     pattern_1_demitons = [ ]; % c'est la succession des valeurs de la variable demitons  
-    pattern_1 = [ ]; % c'est le signal sonore lui-mÍme    
+    pattern_1 = [ ]; % c'est le signal sonore lui-m√™me    
     for i = 1:Nnotes
         z = ordrenotes_1(1, i);
         demitons = scale(1, z);
-        pattern_1_demitons = [pattern_1_demitons demitons]; % concatÈnation couteuse (d'o˘ le soulignÈ), mais on s'en fout
+        pattern_1_demitons = [pattern_1_demitons demitons]; % concat√©nation couteuse (d'o√π le soulign√©), mais on s'en fout
         F = F_ref * 2 ^ (demitons/12);
         vecteur_note = note(F_echan, amp, duree_note, duree_ISI, F);
-        pattern_1 = [pattern_1 vecteur_note];  % concatÈnation couteuse (d'o˘ le soulignÈ), mais on s'en fout
+        pattern_1 = [pattern_1 vecteur_note];  % concat√©nation couteuse (d'o√π le soulign√©), mais on s'en fout
     end
     %
-    % 2Ëme pattern
-    % Il faut que l'ordre des notes soit diffÈrent  
-    % Voir script 'essai' pour vÈrification de la procÈdure
+    % 2√®me pattern
+    % Il faut que l'ordre des notes soit diff√©rent  
+    % Voir script 'essai' pour v√©rification de la proc√©dure
     drapeau = 0;
     while drapeau==0
             ordrenotes_2 = randperm(Nnotes);
@@ -104,13 +112,13 @@ switch(lower(action))
                    end
             end
     end
-    % On dÈfinit (mais sans forcÈment l'utiliser dans cet essai) une Èchelle 'scalediff' diffÈrente de 'scale' ;
-    % la diffÈrence consiste en un dÈplacement d'un demi-ton d'une note prise au hasard,
-    % en excluant les 2 notes extrÍmes, qui forment une octave.
-    % Voir script 'essai2' pour vÈrification de la procÈdure
+    % On d√©finit (mais sans forc√©ment l'utiliser dans cet essai) une √©chelle 'scalediff' diff√©rente de 'scale' ;
+    % la diff√©rence consiste en un d√©placement d'un demi-ton d'une note prise au hasard,
+    % en excluant les 2 notes extr√™mes, qui forment une octave.
+    % Voir script 'essai2' pour v√©rification de la proc√©dure
     drapeau = 0; 
     while drapeau ~= Nnotes
-            notechange = 1 + ceil(rand * (Nnotes - 2));  % varie de 2 ‡ Nnotes-1
+            notechange = 1 + ceil(rand * (Nnotes - 2));  % varie de 2 √† Nnotes-1
             demitons_avant_changement = scale(notechange);
             if rand < 0.5
                 demitons_apres_changement = demitons_avant_changement - 1;
@@ -138,14 +146,14 @@ switch(lower(action))
     for i = 1:Nnotes
         z = ordrenotes_2(1, i);
         demitons = scale_pattern_2(1, z);
-        pattern_2_demitons = [pattern_2_demitons demitons]; % concatÈnation couteuse (d'o˘ le soulignÈ), mais on s'en fout
+        pattern_2_demitons = [pattern_2_demitons demitons]; % concat√©nation couteuse (d'o√π le soulign√©), mais on s'en fout
         F = F_ref * 2 ^ (demitons/12);
         vecteur_note = note(F_echan, amp, duree_note, duree_ISI, F);
-        pattern_2 = [pattern_2 vecteur_note];  % concatÈnation couteuse (d'o˘ le soulignÈ), mais on s'en fout
+        pattern_2 = [pattern_2 vecteur_note];  % concat√©nation couteuse (d'o√π le soulign√©), mais on s'en fout
     end
     %
-    amorce = [zeros(1, F_echan/5)]; % la durÈe de cette amorce silencieuse dÈpend en fait du temps de calcul de matlab
-    silence_intersequences = [zeros(1, F_echan)]; % 1 s de silence entre les deux sÈquences
+    amorce = [zeros(1, F_echan/5)]; % la dur√©e de cette amorce silencieuse d√©pend en fait du temps de calcul de matlab
+    silence_intersequences = [zeros(1, F_echan)]; % 1 s de silence entre les deux s√©quences
     silence_pour_windows = [zeros(1, F_echan/5)];
     deux_intervalles = [amorce  pattern_1  silence_intersequences  pattern_2  silence_pour_windows]'; % passage en colonnes
     musique = audioplayer(deux_intervalles, F_echan, 24);
@@ -216,14 +224,14 @@ switch(lower(action))
         fclose(fileID); % ferme le fichier des erreurs
         action = 'archivage';
         perf = 100 * (Correct_rejections + Hits) / total_essais;
-        fprintf(1, 'Pourcentage de rÈponses correctes :\n');
+        fprintf(1, 'Pourcentage de r√©ponses correctes :\n');
         fprintf(1, '%6.2f;\n',perf);
     end
     sournote5(action);
    
     
     case 'archivage',
-    fileID = fopen('RÈsultatsLD_sournote5.txt','a');
+    fileID = fopen('R√©sultatsLD_sournote5.txt','a');
     SOAms = round(1000 * (duree_note + duree_ISI));
     fprintf(fileID,'%s;%d;%d;%d;%d;%s;%d;%d;%d;%d;%d\n', ...
         nom_sujet, echelle, SOAms, F_ref_min, F_ref_max, moment, total_essais, Hits, Correct_rejections, Misses, False_alarms); 
@@ -248,5 +256,4 @@ vecteur_note_sans_ISI = amp * sin(2*pi*F*temps_son./F_echan + rand*2*pi) .* enve
 nb_echan_ISI = round(F_echan * duree_ISI);
 ISI = zeros(1, nb_echan_ISI);
 vecteur_note = [vecteur_note_sans_ISI ISI];
-
 
