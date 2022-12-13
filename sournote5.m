@@ -35,10 +35,10 @@ switch(lower(action))
     duree_ISI = 0.1;
     nom_sujet = input('votre nom :  ','s');
     %echelle = input('numéro de l''échelle :  ');
-    scalesDor=[2 3 5 7 8 10 12; 0 2 3 5 7 8 10]; % Eolien, mode de la
+    scalesDor=[2 3 5 7 9 10 12; 0 2 3 5 7 9 10]; % Eolien, mode de la
 
-    scalesDorien=[ 0 2 3 5 7 8 10 12; 0 2 3 5 7 8 10 12];
-    disp(scalesDor(1,:));
+    scalesDorien=[ 0 2 3 5 7 9 10 12; 0 2 3 5 7 9 10 12];
+    %disp(scalesDor(1,:));
     Nnotes = size(scale, 2);
     %total_essais = input('nombre d''essais :  ');
     total_essais = 20;
@@ -69,23 +69,44 @@ switch(lower(action))
     
     case 'synthese',
     set (poignee.Bouton1,'Enable','Inactive');
-    set (poignee.Bouton2,'Enable','Inactive');   
-    scalesDor=[2 3 5 7 8 10 12; 0 2 3 5 7 8 10]; % Eolien, mode de la
+    set (poignee.Bouton2,'Enable','Inactive'); 
+    withoutMin=false;
+    withoutMax=false;
+    allNotes=false;
+    scalesDor=[2 3 5 7 9 10 12; 0 2 3 5 7 9 10]; % Eolien, mode de la
 
-    scalesDorien=[ 0 2 3 5 7 8 10 12; 0 2 3 5 7 8 10 12];
-
+    scalesDorien=[ 0 2 3 5 7 9 10 12; 0 2 3 5 7 9 10 12];
+    disp(scalesDor(1,:));
+    disp(scalesDor(2,:));
+    disp(scalesDorien(1,:));
+    disp(scalesDorien(2,:));
     essai = essai+1;
     F_ref = F_ref_min * (2^rand); 
     if rand < 0.5
        rep_juste = 1; % Normal
-       scale=scalesDor(1,:);
+       
 
     else
        rep_juste = 2; % Anormal  
-       scale=scalesDor(2,:);
+       
     end  
     %
-    
+    if rand<0.25
+        scale=scalesDor(1,:);
+        withoutMin=true;
+
+    elseif rand<0.5
+        scale=scalesDor(2,:);
+        withoutMax=true;
+
+    elseif rand<0.75
+        scale=scalesDorien(1,:);
+        allNotes=true;
+    else
+        scale=scalesDorien(2,:);
+        allNotes=true;
+    end
+
     Nnotes = size(scale, 2);
     % 1er pattern
     ordrenotes_1 = randperm(Nnotes);
@@ -116,10 +137,12 @@ switch(lower(action))
     % la différence consiste en un déplacement d'un demi-ton d'une note prise au hasard,
     % en excluant les 2 notes extrêmes, qui forment une octave.
     % Voir script 'essai2' pour vérification de la procédure
+    chance = ceil(4*rand);
     drapeau = 0; 
     while drapeau ~= Nnotes
             notechange = 1 + ceil(rand * (Nnotes - 2));  % varie de 2 à Nnotes-1
             demitons_avant_changement = scale(notechange);
+            %disp(demitons_avant_changement);
             if rand < 0.5
                 demitons_apres_changement = demitons_avant_changement - 1;
             else
@@ -132,15 +155,45 @@ switch(lower(action))
                      end                        
             end 
     end 
-    scalediff = scale;  % initialisation
-    scalediff(notechange) = demitons_apres_changement;
-    %
+    if allNotes==true
+        if chance==1
+            scalediff = [0 2 3 4 7 9 10 12]; % 5 devient 4
+        elseif chance==2
+            scalediff = [0 2 3 6 7 9 10 12]; % 5 devient 6 ; on obtient le phrygien normal
+        elseif chance==3
+            scalediff = [0 2 3 5 6 9 10 12]; % 7 devient 6
+        elseif chance==4
+            scalediff = [0 2 3 5 8 9 10 12]; % 7 devient 8          
+          
+        end
+
+    elseif withoutMin==true
+        if chance==1
+            scalediff = [2 3 4 7 9 10 12]; % 5 devient 4
+        elseif chance==2
+            scalediff = [2 3 6 7 9 10 12]; % 5 devient 6 ; on obtient le phrygien normal
+        elseif chance==3
+            scalediff = [2 3 5 6 9 10 12]; % 7 devient 6
+        elseif chance==4
+            scalediff = [2 3 5 8 9 10 12]; % 7 devient 8
+        end
+    elseif withoutMax==true
+        if chance==1
+            scalediff = [0 2 3 4 7 9 10]; % 5 devient 4
+        elseif chance==2
+            scalediff = [0 2 3 6 7 9 10]; % 5 devient 6 ; on obtient le phrygien normal
+        elseif chance==3
+            scalediff = [0 2 3 5 6 9 10]; % 7 devient 6
+        elseif chance==4
+            scalediff = [0 2 3 5 8 9 10]; % 7 devient 8
+        end
+
+    end
     if rep_juste == 1
         scale_pattern_2 = scale;
     else
         scale_pattern_2 = scalediff;
     end
-    % on a maintenant ce qu'il faut pour construire pattern_2
     pattern_2_demitons = [ ];
     pattern_2 = [ ];
     for i = 1:Nnotes
@@ -226,6 +279,12 @@ switch(lower(action))
         perf = 100 * (Correct_rejections + Hits) / total_essais;
         fprintf(1, 'Pourcentage de réponses correctes :\n');
         fprintf(1, '%6.2f;\n',perf);
+        misses_perf=100*(Misses)/total_essais;
+        fprintf(1, 'Pourcentage omissions :\n');
+        fprintf(1, '%6.2f;\n',misses_perf);
+        false_alarms_perf=100*(False_alarms)/total_essais;
+        fprintf(1, 'Pourcentage de fausses alarmes :\n');
+        fprintf(1, '%6.2f;\n',false_alarms_perf);
     end
     sournote5(action);
    
